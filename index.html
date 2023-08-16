@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
+        <meta name="HandheldFriendly" content="true">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="apple-touch-icon" sizes="57x57" href="img/fav/apple-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="img/fav/apple-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="img/fav/apple-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="img/fav/apple-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="img/fav/apple-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="img/fav/apple-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="img/fav/apple-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="img/fav/apple-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="img/fav/apple-icon-180x180.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="img/fav/android-icon-192x192.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="img/fav/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="96x96" href="img/fav/favicon-96x96.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="img/fav/favicon-16x16.png">
+        <link rel="manifest" href="manifest.json">
+        <meta name="theme-color" content="#000">
+        <script src="NoSleep.js"></script>
+        <title>OBS Tally</title>
+        <script>
+            var currentState = {
+    "socketServer": "localhost:4455",
+    "syncProgram": false,
+    //"socketServer": "192.168.0.104:4444",
+};
+
+
+let nosleep = null;
+
+function NSenable() {
+//alert( "NS" );
+  if (nosleep) nosleep.disable(); // Just to be sure if you forgot to disable.
+  nosleep = new NoSleep();
+  nosleep.enable();
+}
+
+function NSdisable() {
+  if (nosleep) nosleep.disable();
+}
+
+document.addEventListener("visibilitychange", function() {
+  if (document.visibilityState === 'visible') {
+    connectWebsocket();
+  } else {
+    NSdisable();
+  }
+});
+
+
+async function renderShot( img ){
+    document.querySelector('#program').src = img;
+}
+
+async function setColor( color ){
+
+    currentState.color = color;
+
+document.body.classList.remove("off");
+    document.body.classList.remove("red");
+    document.body.classList.remove("green");
+    document.body.classList.remove("blue");
+    document.body.classList.remove("orange");
+    document.body.classList.remove("white");
+    document.body.classList.add(color);
+}
+
+async function updateDisplay() {
+    var color = "off";
+
+    if (currentState.inProgram == true) {
+        //red
+        if( currentState.blueSignal ){
+            color = "blue";
+        }else{
+            color = "red";
+        }
+    } else if (currentState.inPreview == true) {
+        //GREEN
+        if( currentState.orangeSignal ){
+            color = "orange";
+        }else{
+            color = "green";
+        }
+    } else {
+        //OFF
+        color = "off";
+    }
+
+    if( currentState.color != color ){
+        setColor( color );
+    }
+}
+
+async function identify(){
+var op = {
+    "op": 1,
+    "d": {
+        "rpcVersion": 1
+    }
+};
+    websocket.send(JSON.stringify(op));
+    return false;
+}
+async function parseMessage(data) {
+    //console.log(data);
+    var op = null;
+    if (data.hasOwnProperty("op")) {
+        op = data["op"];
+        console.log(data);
+        if(op == 0){
+            return identify();
+        }
+        if(op == 2){
+            console.log("Handshaked");
+            if(currentState.watch_title){
+                return renderTally();
+            }
+            return renderSelect();
+        }
+
+        if(op==7){
+            if (data["d"].hasOwnProperty("requestType")) {
+                if(data["d"]['requestType'] == "GetCurrentProgramScene"){
+                    console.log("get Response");
+                    data["d"]["eventType"] = "CurrentProgramSceneChanged";
+                    data["d"]["eventData"] = {'sceneName':data["d"]['responseData'].currentProgramSceneName};
+                     op=5;
+                }
+                if(data["d"]['requestType'] == "GetCurrentPreviewScene" ){
+                    data["d"]["eventType"] = "CurrentPreviewSceneChanged";
+                    data["d"]["eventData"] = {'sceneName':data["d"]['responseData'].currentPreviewSceneName};
+                     op=5;
+                }
+
+            }
+            
+        }
+        if(op==5){
+            console.log("data",data);
+            if (data["d"].hasOwnProperty("eventType")) {
+                console.log(data);
+                //console.log(data["eventType"]);
+                if(data["d"]['eventType'] == "CurrentProgramSceneChanged" || data["d"]['eventType'] == "CurrentPreviewSceneChanged" ||data["d"]['eventType'] == "SceneTransitionStarted" || data["d"]['eventType']=="SceneTransitionStarted"){
+                    if(data["d"]['eventType'] == "CurrentProgramSceneChanged"){
+                    if (data["d"]['eventData'].sceneName.includes(currentState.watch_title)) {
+                        currentState.inProgram = true;
+                    } else {
+                        currentState.inProgram = false;
+                    }
+
+                        if( currentState.syncProgram ){
+                            //var payload = { "message-id": "request-img", "request-type": "TakeSourceScreenshot", "sourceName": data["scene-name"], embedPictureFormat: 'png', width: 320, compressionQuality: 1 };
+
+                            //websocket.send(JSON.stringify(payload));
+                        }
+                }
+                
+                if(data["d"]['eventType'] == "CurrentPreviewSceneChanged"){
+                    if (data["d"]['eventData'].sceneName.includes(currentState.watch_title)) {
+                        currentState.inPreview = true;
+                    } else {
+                        currentState.inPreview = false;
+                    }
+                }
+
+
+                if (data["d"]["eventType"] == "SceneTransitionStarted") {
+                    if(currentState.inPreview == true){
+                        currentState.inProgram = true;
+                    }
+                }
+                if (data["d"]["eventType"] == "SceneTransitionEnded") {
+                    if(currentState.inPreview == true){
+                        currentState.inProgram = false;
+                    }
+                }
+        
+                updateDisplay();
+                }
+
+                
+            }
+        }
+    }
+}
+
+function renderTally() {
+    document.body.classList.remove("connect_");
+    document.body.classList.remove("select_");
+    document.body.classList.remove("tally_");
+    document.body.classList.add("tally_");
+
+    //return;
+    var payload = {
+  "op": 6,
+  "d": {
+    "requestType": "GetCurrentProgramScene",
+    "requestId": "GetCurrentProgramScene",
+    "requestData": {}
+  }
+};
+    websocket.send(JSON.stringify(payload));
+    var payload = {
+  "op": 6,
+  "d": {
+    "requestType": "GetCurrentPreviewScene",
+    "requestId": "GetCurrentPreviewScene",
+    "requestData": {}
+  }
+};
+    websocket.send(JSON.stringify(payload));
+}
+
+function toggleScreen(){
+    if( currentState.syncProgram == true ){
+        currentState.syncProgram = false;
+        document.body.classList.remove("sync_program_enabled_");
+    }else{
+        currentState.syncProgram = true;
+        document.body.classList.add("sync_program_enabled_");
+    }
+    console.log( "Sync program: ",currentState.syncProgram );
+    return false;
+}
+function select(id) {
+    NSenable();
+
+    currentState.watch_title = "[T" + id + "]";
+    currentState.watch_id = id;
+    document.getElementById("tally_title").innerHTML = currentState.watch_title;
+    document.getElementById("tally_id").innerHTML = currentState.watch_id;
+    
+
+    console.log( currentState );
+    renderTally();
+    return;
+}
+
+function renderSelect() {
+    document.body.classList.remove("connect_");
+    document.body.classList.remove("select_");
+    document.body.classList.remove("tally_");
+    document.body.classList.add("select_");
+    console.log("render");
+}
+
+function connectWebsocket() {
+
+    document.body.classList.add("connecting_");
+
+    console.log("Socket: ", currentState.socketServer);
+    websocket = new WebSocket("ws://" + currentState.socketServer);
+
+    //console.log( websocket );
+
+    websocket.onopen = function(evt) {
+        console.log("Socket open");
+        document.body.classList.remove("connecting_");
+
+        clearInterval(currentState.socketInterval);
+
+        currentState.socketOpened = true;
+        currentState.socketInterval = false;
+    };
+
+    websocket.onclose = function(evt) {
+        console.log("Socket close");
+        if (!currentState.socketInterval) {
+            currentState.socketInterval = setInterval(connectWebsocket, 1000);
+        }
+    };
+
+    websocket.onmessage = function(evt) {
+        //console.log(evt);
+        parseMessage(JSON.parse(evt.data));
+    };
+
+    websocket.onerror = function(evt) {
+        console.log("Socket error");
+        if (!currentState.socketInterval) {
+            currentState.socketInterval = setInterval(connectWebsocket, 1000);
+        }
+    };
+
+    return false;
+}
+
+function enterFullscreen() {
+
+    var elem = document.documentElement;
+
+    /* View in fullscreen */
+    if (currentState.fullScreen) {
+        currentState.fullScreen = false;
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+        }
+    } else {
+        currentState.fullScreen = true;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+        }
+    }
+}
+        </script>
+        <style>
+            * {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -khtml-box-sizing: border-box;
+    outline: 0;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    margin: 0;
+    padding: 0;
+}
+
+button {
+    -webkit-user-select: initial;
+    -ms-user-select: initial;
+    user-select: initial;
+    appearance: none;
+    border: 1px solid black;
+    background-color: white;
+    color: black;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    font-size: 1rem;
+    margin: 1rem;
+}
+
+body {
+    text-align: center;
+    background-color: #1b1b1b;
+    color: white;
+    font-weight: 300;
+    font-family: sans-serif;
+    font-size: 25px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow: scroll;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#page_connect, #page_select, #page_tally {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    max-width: 568px;
+}
+
+#page_tally {
+    align-self: stretch;
+    font-weight: bold;
+    padding: 1rem;
+}
+
+#tally_title, #tally_id, #tally_img {
+    flex: 1 0 100%;
+}
+
+#tally_img{
+    display: none;
+}
+#tally_id {
+    font-size: 7rem;
+}
+
+#tally_img .w19_frame {
+    background-color: black;
+}
+
+.w19_frame {
+    width: 100%;
+    list-style: none;
+    text-align: left;
+    overflow: hidden;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    position: relative;
+    padding-bottom: 56.25%;
+}
+
+.w19_frame .w19_box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0px;
+    padding: 0px;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.w19_box img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+
+body.connect_ #page_connect {
+    display: flex;
+}
+
+body.select_ #page_select {
+    display: flex;
+}
+
+body.tally_ #page_tally {
+    display: flex;
+}
+
+body.off{
+    background-color: black;
+}
+body.red{
+    background-color: #ff0000;
+}
+body.green{
+    background-color: #97da49;
+}
+body.blue{
+    background-color: #2196f3;
+}
+body.orange{
+    background-color: #ff9800;
+}
+body.white{
+    color: black;
+    background-color: white;
+}
+
+@media screen and (min-width: 560px) {
+    #tally_id {
+        flex: 1 0 35%;
+    }
+
+    #tally_img {
+        flex: 1 0 65%;
+    }
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+body.sync_program_enabled_ input + .slider {
+  background-color: #2196F3;
+}
+
+body.sync_program_enabled_ input + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+#master{
+    padding: 1rem;
+}
+
+body.sync_program_enabled_ #tally_img{
+    display: block;
+}
+
+body.connecting_{
+}
+        </style>
+    </head>
+
+    <body class="connect_">
+        <div id="page_connect">
+            <div class="button_cont">
+                <button class="connect" onclick="connectWebsocket();">Connect</button>
+            </div>
+        </div>
+        <div id="page_select">
+            <div id="master">
+                <span>Program screen:</span>
+                <label class="switch select">
+                    <input type="checkbox" onclick="toggleScreen();">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(1);">[T1]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(2);">[T2]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(3);">[T3]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(4);">[T4]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(5);">[T5]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(6);">[T6]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(7);">[T7]</button>
+            </div>
+            <div class="button_cont">
+                <button class="select" onclick="select(8);">[T8]</button>
+            </div>
+        </div>
+        <div id="page_tally">
+            <div id="tally_title" onclick="enterFullscreen();">Title</div>
+            <div id="tally_id">ID</div>
+            <div id="tally_img">
+                <div class="w19_frame">
+                    <div class="w19_box">
+                        <img id="program" alt="" class="" src="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+</html>
