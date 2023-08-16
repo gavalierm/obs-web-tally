@@ -31,7 +31,7 @@
     //"socketServer": "192.168.0.104:4444",
 };
 
-
+var timeout = null;
 let nosleep = null;
 
 function NSenable() {
@@ -122,6 +122,7 @@ async function parseMessage(data) {
             if(currentState.watch_title){
                 return renderTally();
             }
+            toggleScreen();
             return renderSelect();
         }
 
@@ -138,6 +139,9 @@ async function parseMessage(data) {
                     data["d"]["eventData"] = {'sceneName':data["d"]['responseData'].currentPreviewSceneName};
                      op=5;
                 }
+                if(data["d"]['requestType'] == "GetSourceScreenshot" ){
+                    return renderShot(data["d"]['responseData']['imageData']);
+                }
 
             }
             
@@ -145,7 +149,7 @@ async function parseMessage(data) {
         if(op==5){
             console.log("data",data);
             if (data["d"].hasOwnProperty("eventType")) {
-                console.log(data);
+                //console.log(data);
                 //console.log(data["eventType"]);
                 if(data["d"]['eventType'] == "CurrentProgramSceneChanged" || data["d"]['eventType'] == "CurrentPreviewSceneChanged" ||data["d"]['eventType'] == "SceneTransitionStarted" || data["d"]['eventType']=="SceneTransitionStarted"){
                     if(data["d"]['eventType'] == "CurrentProgramSceneChanged"){
@@ -156,9 +160,26 @@ async function parseMessage(data) {
                     }
 
                         if( currentState.syncProgram ){
-                            //var payload = { "message-id": "request-img", "request-type": "TakeSourceScreenshot", "sourceName": data["scene-name"], embedPictureFormat: 'png', width: 320, compressionQuality: 1 };
+                            console.log("Sync enabled sending request");
+                            var payload = {
+                              "op": 6,
+                              "d": {
+                                "requestType": "GetSourceScreenshot",
+                                "requestId": "GetSourceScreenshot",
+                                "requestData": {
+                                    "sourceName":data["d"]['eventData'].sceneName,
+                                    "imageFormat": 'png',
+                                    "imageWidth": 320,
+                                    "imageCompressionQuality": 1
+                                    }
+                              }
+                            };
 
-                            //websocket.send(JSON.stringify(payload));
+                            //var payload = { "message-id": "request-img", "request-type": "TakeSourceScreenshot", "sourceName": data["scene-name"], embedPictureFormat: 'png', width: 320, compressionQuality: 1 };
+                            timeout = setTimeout(function(){
+                                websocket.send(JSON.stringify(payload));
+                            },500);
+                            
                         }
                 }
                 
