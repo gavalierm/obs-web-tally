@@ -113,7 +113,7 @@ async function parseMessage(data) {
     var op = null;
     if (data.hasOwnProperty("op")) {
         op = data["op"];
-        console.log(data);
+        //console.log(data);
         if(op == 0){
             return identify();
         }
@@ -147,7 +147,7 @@ async function parseMessage(data) {
             
         }
         if(op==5){
-            console.log("data",data);
+            //console.log("data",data);
             if (data["d"].hasOwnProperty("eventType")) {
                 //console.log(data);
                 //console.log(data["eventType"]);
@@ -160,7 +160,7 @@ async function parseMessage(data) {
                     }
 
                         if( currentState.syncProgram ){
-                            console.log("Sync enabled sending request");
+                            //console.log("Sync enabled sending request");
                             var payload = {
                               "op": 6,
                               "d": {
