@@ -12,3 +12,7 @@ var currentState = {
     "syncProgram": false,
 };
 ```
+
+## Sync Program
+
+If you want to see Program screenshot on you phone to know what is in progam every cut you can enable this (this can be enabled in app lately)
