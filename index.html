@@ -55,7 +55,7 @@ button {
 
 body {
 	text-align: center;
-	background-color: #1b1b1b;
+	background-color: black;
 	color: white;
 	font-weight: 300;
 	font-family: sans-serif;
@@ -129,26 +129,16 @@ body {
 	height: auto;
 }
 
-body.connect_ #page_connect {
-	display: flex;
-}
-
-body.select_ #page_select {
-	display: flex;
-}
-
+body.select_ #page_select,
 body.tally_ #page_tally {
 	display: flex;
 }
 
-body.off{
-	background-color: black;
-}
-body.red{
-	background-color: #ff0000;
-}
-body.green{
+body.inPreview{
 	background-color: #97da49;
+}
+body.inProgram{
+	background-color: #ff0000;
 }
 body.blue{
 	background-color: #2196f3;
@@ -302,66 +292,28 @@ function storageAvailable(type) {
 var storage = storageAvailable('localStorage') ? localStorage : {};
 let socketServer = storage["socketServer"] || "192.168.2.18:4455";
 document.getElementById("wsUrl").value = socketServer;
-let makeScreenshots = false;
-let screenshotInterval = null;
+let screenshotInterval = false;
+let screenshotScene = "";
+let screenshotPayload = false;
 let reconnectInterval = false;
-let nosleep = null;
+let nosleep = new NoSleep();
 let tallyId = 0;
 let tallyRegex = null;
-var currentState = {};
-
-function NSenable() {
-	//alert( "NS" );
-  if (nosleep) nosleep.disable(); // Just to be sure if you forgot to disable.
-  nosleep = new NoSleep();
-  nosleep.enable();
-}
-
-function NSdisable() {
-  if (nosleep) nosleep.disable();
-}
+let fullScreen = false;
 
 document.addEventListener("visibilitychange", function() {
   if (document.visibilityState === 'visible') {
-		connectWebsocket();
-  } else {
-		NSdisable();
+		// connectWebsocket();
+  } else {  // hidden
+  	nosleep.disable();
   }
 });
 
-async function renderShot(img){
-	document.querySelector('#program').src = img;
-}
-
-async function setColor( color ){
-	currentState.color = color;
-	document.body.classList.remove("off", "red", "green", "blue", "orange", "white");
-	document.body.classList.add(color);
-}
-
-async function updateDisplay() {
-	var color = "off";
-	if (currentState.inProgram == true) {
-		// Red
-		if (currentState.blueSignal) {
-			color = "blue";
-		} else {
-			color = "red";
-		}
-	} else if (currentState.inPreview == true) {
-		// Green
-		if (currentState.orangeSignal) {
-			color = "orange";
-		} else {
-			color = "green";
-		}
+function setBodyClass(name, yes) {
+	if (yes) {
+		document.body.classList.add(name);
 	} else {
-		// Off
-		color = "off";
-	}
-
-	if (currentState.color != color) {
-		setColor( color );
+		document.body.classList.remove(name);
 	}
 }
 
@@ -376,103 +328,104 @@ async function identify(){
 	return false;
 }
 
+function updateScreenshot() {
+	if (screenshotPayload && websocket.readyState == 1) {
+		console.log("Requesting screenshot");
+		websocket.send(screenshotPayload);
+	}
+}
+
+function setScreenshotScene(name) {
+	if (screenshotScene != name) {
+		screenshotScene = name;
+		screenshotPayload = JSON.stringify({
+			"op": 6,
+			"d": {
+				"requestType": "GetSourceScreenshot",
+				"requestId": "GetSourceScreenshot",
+				"requestData": {
+					"sourceName": name,
+					"imageFormat": 'jpeg',
+					"imageWidth": 320,
+					"imageCompressionQuality": 70,
+				}
+			}
+		});
+		setTimeout(updateScreenshot, 50);
+	}
+}
+
 async function parseMessage(data) {
-	//console.log(data);
 	if (!data.hasOwnProperty("op")) return;
-	var op = data["op"];
+	var op = data.op;
 	if (op==0) {
-		return identify();
+		identify();
+		return;
 	}
 	
 	else if (op==2) {
 		console.log("Handshaked");
 		if (tallyRegex) {
-			return renderTally();
+			renderTally();
+			return;
 		}
-		toggleScreenshots();
-		return renderSelect();
 	}
 	
 	else if (op==7) {
-		if (!data["d"].hasOwnProperty("requestType")) return;
-		if (data["d"]['requestType'] == "GetCurrentProgramScene"){
+		if (!data.d.hasOwnProperty("requestType")) return;
+		if (data.d.requestType == "GetCurrentProgramScene"){
 			console.log("get Response");
-			data["d"]["eventType"] = "CurrentProgramSceneChanged";
-			data["d"]["eventData"] = {"sceneName": data["d"]['responseData'].currentProgramSceneName};
+			data.d.eventType = "CurrentProgramSceneChanged";
+			data.d.eventData = {"sceneName": data.d.responseData.currentProgramSceneName};
 			op=5;
 		}
-		else if (data["d"]['requestType'] == "GetCurrentPreviewScene" ){
-			data["d"]["eventType"] = "CurrentPreviewSceneChanged";
-			data["d"]["eventData"] = {"sceneName": data["d"]['responseData'].currentPreviewSceneName};
+		else if (data.d.requestType == "GetCurrentPreviewScene" ){
+			data.d.eventType = "CurrentPreviewSceneChanged";
+			data.d.eventData = {"sceneName": data.d.responseData.currentPreviewSceneName};
 			op=5;
 		}
-		else if (data["d"]['requestType'] == "GetSourceScreenshot" ){
-			return renderShot(data["d"]['responseData']['imageData']);
+		else if (data.d.requestType == "GetSourceScreenshot" ){
+			document.getElementById('program').src = data.d.responseData.imageData;
+			return;
 		}
 	}
 
 	if (op==5) {
-		//console.log("data",data);
-		if (!data["d"].hasOwnProperty("eventType")) return;
-		const eventType = data.d.eventType
-		//console.log(data);
-		//console.log(data["eventType"]);
+		if (!data.d.hasOwnProperty("eventType")) return;
+		const eventType = data.d.eventType;
 
 		if (eventType == "CurrentProgramSceneChanged") {
-			if (data["d"]['eventData'].sceneName.search(tallyRegex) >= 0) {
-				currentState.inProgram = true;
+			if (data.d.eventData.sceneName.search(tallyRegex) >= 0) {
+				setBodyClass("inProgram", true);
+			} else if (screenshotInterval) {
+				setBodyClass("inProgram", false);
+				setScreenshotScene(data.d.eventData.sceneName);
 			} else {
-				currentState.inProgram = false;
-			}
-
-			if (makeScreenshots) {
-				//console.log("Sync enabled sending request");
-				var payload = JSON.stringify({
-					"op": 6,
-					"d": {
-						"requestType": "GetSourceScreenshot",
-						"requestId": "GetSourceScreenshot",
-						"requestData": {
-							"sourceName": data["d"]['eventData'].sceneName,
-							"imageFormat": 'jpeg',
-							"imageWidth": 320,
-							"imageCompressionQuality": 70,
-						}
-					}
-				});
-				let getScreenshot = function() {
-					console.log("Requesting screenshot");
-					websocket.send(payload);
-				}
-
-				if (screenshotInterval) clearInterval(screenshotInterval);
-				screenshotInterval = setInterval(getScreenshot, 5000);
-				setTimeout(getScreenshot, 100);
-				updateDisplay();
+				setBodyClass("inPreview", false);
 			}
 		}
 		
 		else if (eventType == "CurrentPreviewSceneChanged") {
-			if (data["d"]['eventData'].sceneName.search(tallyRegex) >= 0) {
-				currentState.inPreview = true;
+			if (data.d.eventData.sceneName.search(tallyRegex) >= 0) {
+				setBodyClass("inPreview", true);
+			} else if (screenshotInterval && document.body.classList.contains("inProgram")) {
+				setBodyClass("inPreview", false);
+				setScreenshotScene(data.d.eventData.sceneName);
 			} else {
-				currentState.inPreview = false;
+				setBodyClass("inPreview", false);
 			}
-			updateDisplay();
 		}
 		
 		else if (eventType == "SceneTransitionStarted") {
-			if(currentState.inPreview == true){
-				currentState.inProgram = true;
+			if (document.body.classList.contains("inPreview")) {
+				setBodyClass("inProgram", true);
 			}
-			updateDisplay();
 		}
 
 		else if (eventType == "SceneTransitionEnded") {
-			if(currentState.inPreview == true){
-				currentState.inProgram = false;
+			if (document.body.classList.contains("inPreview")) {
+				setBodyClass("inProgram", false);
 			}
-			updateDisplay();
 		}
 	}
 }
@@ -503,14 +456,16 @@ function renderTally() {
 }
 
 function toggleScreenshots(){
-	if (makeScreenshots == true) {
-		makeScreenshots = false;
+	if (screenshotInterval) {
+		console.log('Screenshots disabled')
 		document.body.classList.remove("sync_program_enabled_");
+		clearInterval(screenshotInterval);
+		screenshotInterval = false;
 	} else {
-		makeScreenshots = true;
+		console.log('Screenshots enabled')
 		document.body.classList.add("sync_program_enabled_");
+		screenshotInterval = setInterval(updateScreenshot, 3000);
 	}
-	console.log("Sync program: ", makeScreenshots);
 	return false;
 }
 
@@ -520,7 +475,7 @@ function select(id) {
 	connectWebsocket();
 	document.getElementById("tally_title").innerHTML = "T" + id;
 	document.getElementById("tally_id").innerHTML = tallyId;
-	NSenable();
+	nosleep.enable();
 }
 
 function renderSelect() {
@@ -540,10 +495,13 @@ function connectWebsocket() {
 		console.log("Socket open");
 		document.body.classList.remove("connecting_");
 		clearInterval(reconnectInterval);
-		clearInterval(screenshotInterval);
-		currentState.socketOpened = true;
 		reconnectInterval = false;
 		setTimeout(renderTally, 500);
+	};
+
+	websocket.onmessage = function(evt) {
+		//console.log(evt);
+		parseMessage(JSON.parse(evt.data));
 	};
 
 	websocket.onclose = function(evt) {
@@ -551,11 +509,6 @@ function connectWebsocket() {
 		if (!reconnectInterval) {
 			reconnectInterval = setInterval(connectWebsocket, 3000);
 		}
-	};
-
-	websocket.onmessage = function(evt) {
-		//console.log(evt);
-		parseMessage(JSON.parse(evt.data));
 	};
 
 	websocket.onerror = function(evt) {
@@ -571,8 +524,8 @@ function connectWebsocket() {
 function enterFullscreen() {
 	var elem = document.documentElement;
 	/* View in fullscreen */
-	if (currentState.fullScreen) {
-		currentState.fullScreen = false;
+	if (fullScreen) {
+		fullScreen = false;
 		if (document.exitFullscreen) {
 			document.exitFullscreen();
 		} else if (document.webkitExitFullscreen) { /* Safari */
@@ -581,7 +534,7 @@ function enterFullscreen() {
 			document.msExitFullscreen();
 		}
 	} else {
-		currentState.fullScreen = true;
+		fullScreen = true;
 		if (elem.requestFullscreen) {
 			elem.requestFullscreen();
 		} else if (elem.webkitRequestFullscreen) { /* Safari */
