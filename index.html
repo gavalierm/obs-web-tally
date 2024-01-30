@@ -40,26 +40,13 @@
 	padding: 0;
 }
 
-button {
-	user-select: initial;
-	appearance: none;
-	border: 1px solid black;
-	background-color: white;
-	color: black;
-	padding: 2rem 2rem;
-	border-radius: 0.5rem;
-	overflow: hidden;
-	font-size: 1.5rem;
-	margin: 1rem;
-}
-
 body {
 	text-align: center;
 	background-color: black;
-	color: white;
+	color: #eee;
 	font-weight: 300;
 	font-family: sans-serif;
-	font-size: 25px;
+	font-size: 20px;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -71,22 +58,63 @@ body {
 	justify-content: center;
 }
 
-#page_connect, #page_select, #page_tally {
+button,
+i {
+	user-select: initial;
+	appearance: none;
+	background-color: #707070;
+	color: black;
+	padding: 1rem 0;
+	border-radius: 0.5rem;
+	overflow: hidden;
+	font-size: 1.2rem;
+	margin: .5rem;
+	width: 4rem;
+	border: none;
+	text-align: center;
+}
+
+button:hover,
+i:hover {
+	background-color: #999;
+}
+
+i.sel {
+	background-color: #404040;
+}
+
+input[type='text'],
+input[type='password'] {
+	padding: 1rem;
+	font-size: 1.2rem;
+	border: 0;
+	background: #707070;
+	border-radius: .5rem;
+	margin: 1rem .5rem 0;
+}
+input[type='password'] {
+	display: none;
+}
+
+#pageSelect,
+#pageSwitcher,
+#pageTally {
 	display: none;
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	flex: 1;
-	max-width: 568px;
+	max-width: 90%;
 }
 
-#page_tally {
+#pageTally {
 	align-self: stretch;
 	font-weight: bold;
-	padding: 1rem;
+	max-width: 100%;
 }
 
-#tally_title, #tally_id, #tally_img {
+#tally_id,
+#tally_img {
 	flex: 1 0 100%;
 }
 
@@ -111,6 +139,7 @@ body {
 	background-position: center center;
 	position: relative;
 	padding-bottom: 56.25%;
+	margin-bottom: 1rem;
 }
 
 .w19_frame .w19_box {
@@ -129,111 +158,51 @@ body {
 	height: auto;
 }
 
-body.select_ #page_select,
-body.tally_ #page_tally {
+body.pageSelect #pageSelect,
+body.pageSwitcher #pageSwitcher,
+body.pageTally #pageTally {
 	display: flex;
 }
 
 body.inPreview{
 	background-color: #97da49;
+	color: black;
 }
 body.inProgram{
 	background-color: #ff0000;
-}
-body.blue{
-	background-color: #2196f3;
-}
-body.orange{
-	background-color: #ff9800;
-}
-body.white{
 	color: black;
-	background-color: white;
 }
 
 @media screen and (min-width: 560px) {
-	#tally_id {
-		flex: 1 0 35%;
-	}
-
-	#tally_img {
-		flex: 1 0 65%;
-	}
+	#tally_id { flex: 1 0 35%; }
+	#tally_img { flex: 1 0 50%; }
+	#pageTally { padding: 0 1rem; }
 }
 
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
+	margin: 1rem 0 0;
+	width: 100%;
 }
 
 .switch input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
+  width: 2rem;
+  height: 2rem;
+  vertical-align: middle;
 }
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-body.sync_program_enabled_ input + .slider {
-  background-color: #2196F3;
-}
-
-body.sync_program_enabled_ input + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-
-#master{
-	padding: 1rem;
-}
-
-#wsUrl {
-	padding: 1rem;
-	font-size: 1.2rem;
-}
-
-body.sync_program_enabled_ #tally_img{
+body.showScreen #tally_img{
 	display: block;
+}
+
+#signal {
+  font-size: 10rem;
+  font-weight: bold;
 }
 	</style>
 	</head>
 
-	<body class="select_">
-		<div id="page_select">
+	<body class="pageSelect">
+		<div id="pageSelect">
 			<button onclick="select(1);">T1</button>
 			<button onclick="select(2);">T2</button>
 			<button onclick="select(3);">T3</button>
@@ -242,25 +211,54 @@ body.sync_program_enabled_ #tally_img{
 			<button onclick="select(6);">T6</button>
 			<button onclick="select(7);">T7</button>
 			<button onclick="select(8);">T8</button>
-			<div id="master">
-				<span>Screen:</span>
-				<label class="switch select">
-					<input type="checkbox" onclick="toggleScreenshots();">
-					<span class="slider round"></span>
-				</label>
-			</div>
-			<input type="input" id="wsUrl" value="192.168.1.2:4455">
+			<button onclick="select(9);">T9</button>
+			<button onclick="select(10);">T10</button>
+			<button onclick="select(11);">T11</button>
+			<button onclick="select(12);">T12</button>
+			<button onclick="select(0);">SW</button>
+			<label class="switch"><input type="checkbox" id="showScreen"> screenshot</label>
+			<input type="text" id="name" placeholder="Name" value="Name"/>
+			<input type="text" id="wsUrl" placeholder="WebSocket host:port" value="192.168.1.2:4455"/>
+			<input type="password" id="password" placeholder="password"/>
 		</div>
-		<div id="page_tally">
-			<div id="tally_title" onclick="enterFullscreen();">Title</div>
-			<div id="tally_id">ID</div>
+		<div id="pageTally">
+			<span id="sceneName" onclick="enterFullscreen();"></span>
+			<span id="tally_id">0</span>
+			<span id="signal"></span>
 			<div id="tally_img">
 				<div class="w19_frame">
 					<div class="w19_box">
-						<img id="program" alt="" class="" src="">
+						<img id="program" alt="" src="">
 					</div>
 				</div>
+				<span id="screenSceneName"></span>
 			</div>
+		</div>
+		<div id="pageSwitcher">
+			<i>1</i>
+			<i>2</i>
+			<i>3</i>
+			<i>4</i>
+			<i>5</i>
+			<i>6</i>
+			<i>7</i>
+			<i>8</i>
+			<i>9</i>
+			<i>10</i>
+			<i>11</i>
+			<i>12</i>
+			<button onclick='signal(13)'>&leftarrow;</button>
+			<button onclick='signal(14)'>&downarrow;</button>
+			<button onclick='signal(15)'>&uparrow;</button>
+			<button onclick='signal(16)'>&rightarrow;</button>
+			<button onclick='signal(12)'>&times;</button>
+			<button onclick='signal(17)'>F</button>
+			<button onclick='signal(18)'>B</button>
+			<button onclick='signal(19)'>Z</button>
+			<button onclick='signal(20)'>&#9761;</button>
+			<button onclick='signal(21)'>I+</button>
+			<button onclick='signal(22)'>I-</button>
+			<button onclick='signal(23)'>&check;</button>
 		</div>
 	</body>
 
@@ -289,9 +287,84 @@ function storageAvailable(type) {
   }
 }
 
+function sha256(ascii) {
+	function rightRotate(value, amount) {
+		return (value>>>amount) | (value<<(32 - amount));
+	};
+	var mathPow = Math.pow;
+	var maxWord = mathPow(2, 32);
+	var lengthProperty = 'length'
+	var i, j;
+	var result = ''
+	var words = [];
+	var asciiBitLength = ascii[lengthProperty]*8;
+	var hash = sha256.h = sha256.h || [];
+	var k = sha256.k = sha256.k || [];
+	var primeCounter = k[lengthProperty];
+	var isComposite = {};
+	for (var candidate = 2; primeCounter < 64; candidate++) {
+		if (!isComposite[candidate]) {
+			for (i = 0; i < 313; i += candidate) {
+				isComposite[i] = candidate;
+			}
+			hash[primeCounter] = (mathPow(candidate, .5)*maxWord)|0;
+			k[primeCounter++] = (mathPow(candidate, 1/3)*maxWord)|0;
+		}
+	}
+	ascii += '\x80'
+	while (ascii[lengthProperty]%64 - 56) ascii += '\x00'
+	for (i = 0; i < ascii[lengthProperty]; i++) {
+		j = ascii.charCodeAt(i);
+		if (j>>8) return;
+		words[i>>2] |= j << ((3 - i)%4)*8;
+	}
+	words[words[lengthProperty]] = ((asciiBitLength/maxWord)|0);
+	words[words[lengthProperty]] = (asciiBitLength)
+	// process each chunk
+	for (j = 0; j < words[lengthProperty];) {
+		var w = words.slice(j, j += 16);
+		var oldHash = hash;
+		hash = hash.slice(0, 8);
+		for (i = 0; i < 64; i++) {
+			var i2 = i + j;
+			var w15 = w[i - 15], w2 = w[i - 2];
+			var a = hash[0], e = hash[4];
+			var temp1 = hash[7]
+				+ (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) // S1
+				+ ((e&hash[5])^((~e)&hash[6])) // ch
+				+ k[i]
+				+ (w[i] = (i < 16) ? w[i] : (
+						w[i - 16]
+						+ (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15>>>3)) // s0
+						+ w[i - 7]
+						+ (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2>>>10)) // s1
+					)|0
+				);
+			var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) // S0
+				+ ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2])); // maj
+			hash = [(temp1 + temp2)|0].concat(hash);
+			hash[4] = (hash[4] + temp1)|0;
+		}
+		for (i = 0; i < 8; i++) {
+			hash[i] = (hash[i] + oldHash[i])|0;
+		}
+	}
+	result = new ArrayBuffer(32);
+	for (i = 0; i < 8; i++) {
+		for (j = 3; j + 1; j--) {
+			result[i+3-j] = (hash[i] >> (j*8)) & 255;
+		}
+	}
+	return result;
+};
+
 var storage = storageAvailable('localStorage') ? localStorage : {};
 let socketServer = storage["socketServer"] || "192.168.2.18:4455";
 document.getElementById("wsUrl").value = socketServer;
+document.getElementById("name").value = storage["name"] || "Name";
+const sceneName = document.getElementById("sceneName");
+const screenSceneName = document.getElementById("screenSceneName");
+const signalEl = document.getElementById('signal');
 let screenshotInterval = false;
 let screenshotScene = "";
 let screenshotPayload = false;
@@ -300,6 +373,21 @@ let nosleep = new NoSleep();
 let tallyId = 0;
 let tallyRegex = null;
 let fullScreen = false;
+let selectedTallyId = 0;
+const signals = {
+	12: '×',
+	13: '←',
+	14: '↓',
+	15: '↑',
+	16: '→',
+	17: 'F',
+	18: 'B',
+	19: 'Z',
+	20: '☡',
+	21: 'ISO+',
+	22: 'ISO-',
+	23: '✓',
+}
 
 document.addEventListener("visibilitychange", function() {
   if (document.visibilityState === 'visible') {
@@ -309,23 +397,27 @@ document.addEventListener("visibilitychange", function() {
   }
 });
 
+const all_i = document.querySelectorAll("i");
+function selNone() {
+	all_i.forEach(function(e){
+		e.classList.remove("sel")
+	})
+}
+
+all_i.forEach(function(e) {
+	e.addEventListener("click", function(){
+		selNone();
+		e.classList.add("sel");
+		selectedTallyId = +e.innerText;
+	})
+})
+
 function setBodyClass(name, yes) {
 	if (yes) {
 		document.body.classList.add(name);
 	} else {
 		document.body.classList.remove(name);
 	}
-}
-
-async function identify(){
-	var op = {
-		"op": 1,
-		"d": {
-			"rpcVersion": 1
-		}
-	};
-	websocket.send(JSON.stringify(op));
-	return false;
 }
 
 function updateScreenshot() {
@@ -336,8 +428,9 @@ function updateScreenshot() {
 }
 
 function setScreenshotScene(name) {
-	if (screenshotScene != name) {
+	if (screenshotScene != name && screenshotInterval) {
 		screenshotScene = name;
+		screenSceneName.innerText = name;
 		screenshotPayload = JSON.stringify({
 			"op": 6,
 			"d": {
@@ -346,8 +439,8 @@ function setScreenshotScene(name) {
 				"requestData": {
 					"sourceName": name,
 					"imageFormat": 'jpeg',
-					"imageWidth": 320,
-					"imageCompressionQuality": 70,
+					"imageWidth": 360,
+					"imageCompressionQuality": 80,
 				}
 			}
 		});
@@ -355,64 +448,119 @@ function setScreenshotScene(name) {
 	}
 }
 
-async function parseMessage(data) {
-	if (!data.hasOwnProperty("op")) return;
-	var op = data.op;
+function signal(i) {
+	console.log(i, selectedTallyId);
+	websocket.send(JSON.stringify({
+		"op": 6,
+		"d": {
+			"requestType": "BroadcastCustomEvent",
+			"requestId": "b",
+			"requestData": {
+				"eventData": {
+					"type": "tally",
+					"from": tallyId,
+					"to": selectedTallyId,
+					"signal": i,
+				}
+			}
+		}
+	}));
+}
+
+function parseMessage({op, d}) {
 	if (op==0) {
-		identify();
+		const response = {"op":1,"d":{"rpcVersion":1}};
+		if (d.authentication) {
+			const password = document.getElementById("password").value;
+			response.d.authentication = btoa(sha256(btoa(sha256(password + d.authentication.salt)) + d.authentication.challenge));
+		}
+		websocket.send(JSON.stringify(response));
 		return;
 	}
 	
 	else if (op==2) {
 		console.log("Handshaked");
 		if (tallyRegex) {
-			renderTally();
+			document.body.classList.remove("pageSelect");
+			document.body.classList.add(tallyId == 0 ? "pageSwitcher" : "pageTally");
+			websocket.send(JSON.stringify({
+				"op": 6,
+				"d": {
+					"requestType": "GetCurrentProgramScene",
+					"requestId": "a",
+					"requestData": {}
+				}
+			}));
+			websocket.send(JSON.stringify({
+				"op": 6,
+				"d": {
+					"requestType": "GetCurrentPreviewScene",
+					"requestId": "b",
+					"requestData": {}
+				}
+			}));
+			/*
+			websocket.send(JSON.stringify({
+				"op": 6,
+				"d": {
+					"requestType": "BroadcastCustomEvent",
+					"requestId": "c",
+					"requestData": {
+						"eventData": {
+							"type": "tally",
+							"from": tallyId,
+							"to": 0,
+							"name": document.getElementById("name").value,
+						}
+					}
+				}
+			}));
+			*/
 			return;
 		}
 	}
 	
 	else if (op==7) {
-		if (!data.d.hasOwnProperty("requestType")) return;
-		if (data.d.requestType == "GetCurrentProgramScene"){
-			console.log("get Response");
-			data.d.eventType = "CurrentProgramSceneChanged";
-			data.d.eventData = {"sceneName": data.d.responseData.currentProgramSceneName};
+		if (d.requestType == "GetCurrentProgramScene"){
+			d.eventType = "CurrentProgramSceneChanged";
+			d.eventData = {"sceneName": d.responseData.currentProgramSceneName};
 			op=5;
 		}
-		else if (data.d.requestType == "GetCurrentPreviewScene" ){
-			data.d.eventType = "CurrentPreviewSceneChanged";
-			data.d.eventData = {"sceneName": data.d.responseData.currentPreviewSceneName};
+		else if (d.requestType == "GetCurrentPreviewScene"){
+			d.eventType = "CurrentPreviewSceneChanged";
+			d.eventData = {"sceneName": d.responseData.currentPreviewSceneName};
 			op=5;
 		}
-		else if (data.d.requestType == "GetSourceScreenshot" ){
-			document.getElementById('program').src = data.d.responseData.imageData;
+		else if (d.requestType == "GetSourceScreenshot"){
+			document.getElementById('program').src = d.responseData.imageData;
 			return;
 		}
 	}
 
 	if (op==5) {
-		if (!data.d.hasOwnProperty("eventType")) return;
-		const eventType = data.d.eventType;
+		const eventType = d.eventType;
 
 		if (eventType == "CurrentProgramSceneChanged") {
-			if (data.d.eventData.sceneName.search(tallyRegex) >= 0) {
+			if (d.eventData.sceneName.search(tallyRegex) >= 0) {
 				setBodyClass("inProgram", true);
-			} else if (screenshotInterval) {
+				sceneName.innerText = d.eventData.sceneName;
+			} else  {
 				setBodyClass("inProgram", false);
-				setScreenshotScene(data.d.eventData.sceneName);
-			} else {
-				setBodyClass("inPreview", false);
+				setScreenshotScene(d.eventData.sceneName);
 			}
 		}
 		
 		else if (eventType == "CurrentPreviewSceneChanged") {
-			if (data.d.eventData.sceneName.search(tallyRegex) >= 0) {
+			if (d.eventData.sceneName.search(tallyRegex) >= 0) {
 				setBodyClass("inPreview", true);
-			} else if (screenshotInterval && document.body.classList.contains("inProgram")) {
-				setBodyClass("inPreview", false);
-				setScreenshotScene(data.d.eventData.sceneName);
+				if (!document.body.classList.contains("inProgram")) {
+					sceneName.innerText = d.eventData.sceneName;
+				}
 			} else {
 				setBodyClass("inPreview", false);
+				if (document.body.classList.contains("inProgram")) {
+					setScreenshotScene(d.eventData.sceneName);
+				}
 			}
 		}
 		
@@ -421,67 +569,38 @@ async function parseMessage(data) {
 				setBodyClass("inProgram", true);
 			}
 		}
-
+		/*
 		else if (eventType == "SceneTransitionEnded") {
 			if (document.body.classList.contains("inPreview")) {
 				setBodyClass("inProgram", false);
 			}
 		}
-	}
-}
+		*/
 
-function renderTally() {
-	document.body.classList.remove("connect_", "select_");
-	document.body.classList.add("tally_");
-
-	//return;
-	var payload = {
-		"op": 6,
-		"d": {
-			"requestType": "GetCurrentProgramScene",
-			"requestId": "GetCurrentProgramScene",
-			"requestData": {}
+		else if (eventType == "CustomEvent"
+				&& d.eventData.type == "tally"
+				&& d.eventData.to == tallyId) {
+			console.log(d.eventData.signal, signals[d.eventType.signal])
+			signalEl.innerText = signals[d.eventData.signal||0] || "";
+			setTimeout(function(){signalEl.innerText = ""}, 5000)
 		}
-	};
-	websocket.send(JSON.stringify(payload));
-	var payload = {
-		"op": 6,
-		"d": {
-			"requestType": "GetCurrentPreviewScene",
-			"requestId": "GetCurrentPreviewScene",
-			"requestData": {}
-		}
-	};
-	websocket.send(JSON.stringify(payload));
-}
-
-function toggleScreenshots(){
-	if (screenshotInterval) {
-		console.log('Screenshots disabled')
-		document.body.classList.remove("sync_program_enabled_");
-		clearInterval(screenshotInterval);
-		screenshotInterval = false;
-	} else {
-		console.log('Screenshots enabled')
-		document.body.classList.add("sync_program_enabled_");
-		screenshotInterval = setInterval(updateScreenshot, 3000);
 	}
-	return false;
 }
 
 function select(id) {
 	tallyId = id;
-	tallyRegex = new RegExp(`\\bT${tallyId}\\b`);
 	connectWebsocket();
-	document.getElementById("tally_title").innerHTML = "T" + id;
-	document.getElementById("tally_id").innerHTML = tallyId;
+	tallyRegex = new RegExp(`\\bT${tallyId}\\b`);
+	document.getElementById("tally_id").innerText = tallyId;
 	nosleep.enable();
-}
-
-function renderSelect() {
-	document.body.classList.remove("connect_", "select_", "tally_");
-	document.body.classList.add("select_");
-	console.log("render");
+	if (document.getElementById("showScreen").checked) {
+		document.body.classList.add("showScreen");
+		screenshotInterval = setInterval(updateScreenshot, 3000);
+	} else {
+		document.body.classList.remove("showScreen");
+		clearInterval(screenshotInterval);
+		screenshotInterval = false;
+	}
 }
 
 function connectWebsocket() {
@@ -496,7 +615,6 @@ function connectWebsocket() {
 		document.body.classList.remove("connecting_");
 		clearInterval(reconnectInterval);
 		reconnectInterval = false;
-		setTimeout(renderTally, 500);
 	};
 
 	websocket.onmessage = function(evt) {
