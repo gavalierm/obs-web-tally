@@ -487,23 +487,24 @@ function parseMessage({op, d}) {
 				"op": 6,
 				"d": {
 					"requestType": "GetCurrentProgramScene",
-					"requestId": "GetCurrentProgramScene",
+					"requestId": "a",
 					"requestData": {}
 				}
 			}));
 			websocket.send(JSON.stringify({
 				"op": 6,
 				"d": {
-					"requestType": "GetCurrentProgramScene",
-					"requestId": "GetCurrentProgramScene",
+					"requestType": "GetCurrentPreviewScene",
+					"requestId": "b",
 					"requestData": {}
 				}
 			}));
+			/*
 			websocket.send(JSON.stringify({
 				"op": 6,
 				"d": {
 					"requestType": "BroadcastCustomEvent",
-					"requestId": "b",
+					"requestId": "c",
 					"requestData": {
 						"eventData": {
 							"type": "tally",
@@ -514,6 +515,7 @@ function parseMessage({op, d}) {
 					}
 				}
 			}));
+			*/
 			return;
 		}
 	}
