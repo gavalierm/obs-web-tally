@@ -366,6 +366,7 @@ const sceneName = document.getElementById("sceneName");
 const screenSceneName = document.getElementById("screenSceneName");
 const signalEl = document.getElementById('signal');
 let screenshotInterval = false;
+let clearSignalTimeout = false;
 let screenshotScene = "";
 let screenshotPayload = false;
 let reconnectInterval = false;
@@ -582,7 +583,8 @@ function parseMessage({op, d}) {
 				&& d.eventData.to == tallyId) {
 			console.log(d.eventData.signal, signals[d.eventType.signal])
 			signalEl.innerText = signals[d.eventData.signal||0] || "";
-			setTimeout(function(){signalEl.innerText = ""}, 5000)
+			if (clearSignalTimeout) clearTimeout(clearSignalTimeout);
+			clearSignalTimeout = setTimeout(function(){signalEl.innerText = ""}, 10000)
 		}
 	}
 }
