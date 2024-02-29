@@ -53,24 +53,33 @@ body {
 	bottom: 0;
 	right: 0;
 	overflow: scroll;
-	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
-button,
-i {
+#menu {
+	position: absolute;
+	bottom: .5rem;
+	right: .5rem;
+	width: 100%;
+	text-align: center;
+}
+
+#menu svg path {
+	stroke: #333;
+}
+
+button, i {
 	user-select: initial;
 	appearance: none;
-	background-color: #707070;
-	color: black;
-	padding: 1rem 0;
-	border-radius: 0.5rem;
+	background-color: transparent;
+	color: #333;
+	border-radius: 20%;
 	overflow: hidden;
-	font-size: 1.2rem;
-	margin: .5rem;
-	width: 4rem;
-	border: none;
+	line-height: 3rem;
+	font-size: 2rem;
+	width: 3rem;
+	border: 1px solid #333;
 	text-align: center;
 }
 
@@ -78,39 +87,63 @@ button:hover,
 i:hover {
 	background-color: #999;
 }
-
 i.sel {
 	background-color: #404040;
 }
 
 input[type='text'],
 input[type='password'] {
-	padding: 1rem;
+	padding: .7rem;
 	font-size: 1.2rem;
-	border: 0;
-	background: #707070;
+	border: 1px solid #333;
+	background: black;
 	border-radius: .5rem;
-	margin: 1rem .5rem 0;
+	margin: 0 0 .5rem;
+	color: #eee;
+	vertical-align: middle;;
 }
 input[type='password'] {
 	display: none;
 }
 
-#pageSelect,
-#pageSwitcher,
-#pageTally {
-	display: none;
+#pageSwitcher {
+	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
-	flex: 1;
 	max-width: 90%;
+	font-weight: bold;
+}
+
+#pageSwitcher button,
+#pageSwitcher i {
+	user-select: initial;
+	background-color: transparent;
+	color: #333;
+	border-radius: 20%;
+	overflow: hidden;
+	line-height: 3rem;
+	font-size: 1.3rem;
+	width: 3rem;
+	border: 1px solid #333;
+	text-align: center;
+	margin: .25rem;
+}
+
+#pageSwitcher h2 {
+	width: 100%;
+	padding: 1rem;
 }
 
 #pageTally {
-	align-self: stretch;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
 	font-weight: bold;
+	justify-content: space-evenly;
 	max-width: 100%;
+	height: 100vh;
 }
 
 #tally_id,
@@ -118,15 +151,15 @@ input[type='password'] {
 	flex: 1 0 100%;
 }
 
-#tally_img{
+#tally_img {
 	display: none;
 }
 #tally_id {
 	font-size: 7rem;
 }
 
-#tally_img .w19_frame {
-	background-color: black;
+body.showScreen #tally_img {
+	display: block;
 }
 
 .w19_frame {
@@ -158,18 +191,34 @@ input[type='password'] {
 	height: auto;
 }
 
-body.pageSelect #pageSelect,
-body.pageSwitcher #pageSwitcher,
-body.pageTally #pageTally {
+#connect {
+	display: none;
+}
+body.showConnect #connect {
+	display: block;
+}
+#pageSwitcher {
+	display: none;
+}
+body.T0 #pageSwitcher {
 	display: flex;
 }
+body.T0 #pageTally {
+	display: none;
+}
 
-body.inPreview{
+body.inPreview {
 	background-color: #97da49;
 	color: black;
 }
-body.inProgram{
+body.inProgram,
+body.inDSK {
 	background-color: #ff0000;
+	color: black;
+}
+body.inProgram.inPreview,
+body.inDSK.inPreview {
+	background-color: #ffd000;
 	color: black;
 }
 
@@ -190,39 +239,16 @@ body.inProgram{
   vertical-align: middle;
 }
 
-body.showScreen #tally_img{
-	display: block;
-}
-
 #signal {
   font-size: 10rem;
   font-weight: bold;
 }
-	</style>
+</style>
 	</head>
 
-	<body class="pageSelect">
-		<div id="pageSelect">
-			<button onclick="select(1);">T1</button>
-			<button onclick="select(2);">T2</button>
-			<button onclick="select(3);">T3</button>
-			<button onclick="select(4);">T4</button>
-			<button onclick="select(5);">T5</button>
-			<button onclick="select(6);">T6</button>
-			<button onclick="select(7);">T7</button>
-			<button onclick="select(8);">T8</button>
-			<button onclick="select(9);">T9</button>
-			<button onclick="select(10);">T10</button>
-			<button onclick="select(11);">T11</button>
-			<button onclick="select(12);">T12</button>
-			<button onclick="select(0);">SW</button>
-			<label class="switch"><input type="checkbox" id="showScreen"> screenshot</label>
-			<input type="text" id="name" placeholder="Name" value="Name"/>
-			<input type="text" id="wsUrl" placeholder="WebSocket host:port" value="192.168.1.2:4455"/>
-			<input type="password" id="password" placeholder="password"/>
-		</div>
+	<body class="showConnect">
 		<div id="pageTally">
-			<span id="sceneName" onclick="enterFullscreen();"></span>
+			<span id="sceneName" onclick="toggleFullscreen();"></span>
 			<span id="tally_id">0</span>
 			<span id="signal"></span>
 			<div id="tally_img">
@@ -235,6 +261,7 @@ body.showScreen #tally_img{
 			</div>
 		</div>
 		<div id="pageSwitcher">
+			<h2>Switcher</h2>
 			<i>1</i>
 			<i>2</i>
 			<i>3</i>
@@ -247,6 +274,7 @@ body.showScreen #tally_img{
 			<i>10</i>
 			<i>11</i>
 			<i>12</i>
+			<br>
 			<button onclick='signal(13)'>&leftarrow;</button>
 			<button onclick='signal(14)'>&downarrow;</button>
 			<button onclick='signal(15)'>&uparrow;</button>
@@ -259,6 +287,18 @@ body.showScreen #tally_img{
 			<button onclick='signal(21)'>I+</button>
 			<button onclick='signal(22)'>I-</button>
 			<button onclick='signal(23)'>&check;</button>
+		</div>
+		<div id="menu">
+			<div id="connect">
+				<input type="text" id="wsUrl" placeholder="WebSocket host:port" value="192.168.1.2:4455"/>
+				<input type="password" id="password" placeholder="password"/>
+				<button onclick="connectWebsocket()" style="background: black;">OK</button>
+			</div>
+			<button onclick="toggleConnect()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke-width="1.5" color="#000"><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" d="M14 12c0-2-2-5-5-5H7c-3 0-5 2-5 5a5 5 0 0 0 5 5"/><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" d="M10 12c0 2 2 5 5 5h2c3 0 5-2 5-5a5 5 0 0 0-5-5"/></svg></button>
+			<button onclick="toggleScreen()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke-width="1.5" color="#000"><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" d="M15 12v4l-1 1H4l-1-1V8l1-1h10l1 1v4Zm0 0 5-4h1v8h-1l-5-4Z"/></svg></button>
+			<button onclick="toggleFullscreen()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke-width="1.5" color="#000"><path stroke="#000" stroke-linecap="round" stroke-linejoin="round" d="m17 8-5-5-5 5M17 16l-5 5-5-5"/></svg></button>
+			<button onclick="clickMinus()">-</button>
+			<button onclick="clickPlus()">+</button>
 		</div>
 	</body>
 
@@ -361,17 +401,23 @@ function sha256(ascii) {
 var storage = storageAvailable('localStorage') ? localStorage : {};
 let socketServer = storage["socketServer"] || "192.168.2.18:4455";
 document.getElementById("wsUrl").value = socketServer;
-document.getElementById("name").value = storage["name"] || "Name";
-const sceneName = document.getElementById("sceneName");
-const screenSceneName = document.getElementById("screenSceneName");
+let tallyId = +storage["tallyId"] || 0;
+let websocket = {};
+let programSceneName = "";
+let previewSceneName = "";
+const sceneNameEl = document.getElementById("sceneName");
+const screenSceneNameEl = document.getElementById("screenSceneName");
 const signalEl = document.getElementById('signal');
 let screenshotInterval = false;
+if (+storage["screenshot"]) {
+	screenshotInterval = setInterval(updateScreenshot, 3000);
+	setBodyClass("showScreen", true);
+}
 let clearSignalTimeout = false;
 let screenshotScene = "";
 let screenshotPayload = false;
 let reconnectInterval = false;
 let nosleep = new NoSleep();
-let tallyId = 0;
 let tallyRegex = null;
 let fullScreen = false;
 let selectedTallyId = 0;
@@ -384,18 +430,18 @@ const signals = {
 	17: 'F',
 	18: 'B',
 	19: 'Z',
-	20: '☡',
+	20: 'Z-',
 	21: 'ISO+',
 	22: 'ISO-',
 	23: '✓',
 }
 
 document.addEventListener("visibilitychange", function() {
-  if (document.visibilityState === 'visible') {
+	if (document.visibilityState === 'visible') {
 		// connectWebsocket();
-  } else {  // hidden
-  	nosleep.disable();
-  }
+	} else {  // hidden
+		nosleep.disable();
+	}
 });
 
 const all_i = document.querySelectorAll("i");
@@ -431,7 +477,7 @@ function updateScreenshot() {
 function setScreenshotScene(name) {
 	if (screenshotScene != name && screenshotInterval) {
 		screenshotScene = name;
-		screenSceneName.innerText = name;
+		screenSceneNameEl.innerText = name;
 		screenshotPayload = JSON.stringify({
 			"op": 6,
 			"d": {
@@ -470,7 +516,7 @@ function signal(i) {
 
 function parseMessage({op, d}) {
 	if (op==0) {
-		const response = {"op":1,"d":{"rpcVersion":1}};
+		const response = {"op":1,"d":{"rpcVersion":1,"eventSubscriptions":4+16+512}};
 		if (d.authentication) {
 			const password = document.getElementById("password").value;
 			response.d.authentication = btoa(sha256(btoa(sha256(password + d.authentication.salt)) + d.authentication.challenge));
@@ -482,8 +528,7 @@ function parseMessage({op, d}) {
 	else if (op==2) {
 		console.log("Handshaked");
 		if (tallyRegex) {
-			document.body.classList.remove("pageSelect");
-			document.body.classList.add(tallyId == 0 ? "pageSwitcher" : "pageTally");
+			document.body.classList.remove("showConnect");
 			websocket.send(JSON.stringify({
 				"op": 6,
 				"d": {
@@ -500,23 +545,6 @@ function parseMessage({op, d}) {
 					"requestData": {}
 				}
 			}));
-			/*
-			websocket.send(JSON.stringify({
-				"op": 6,
-				"d": {
-					"requestType": "BroadcastCustomEvent",
-					"requestId": "c",
-					"requestData": {
-						"eventData": {
-							"type": "tally",
-							"from": tallyId,
-							"to": 0,
-							"name": document.getElementById("name").value,
-						}
-					}
-				}
-			}));
-			*/
 			return;
 		}
 	}
@@ -542,25 +570,27 @@ function parseMessage({op, d}) {
 		const eventType = d.eventType;
 
 		if (eventType == "CurrentProgramSceneChanged") {
-			if (d.eventData.sceneName.search(tallyRegex) >= 0) {
+			programSceneName = d.eventData.sceneName;
+			if (programSceneName.search(tallyRegex) >= 0) {
 				setBodyClass("inProgram", true);
-				sceneName.innerText = d.eventData.sceneName;
-			} else  {
+				sceneNameEl.innerText = programSceneName;
+			} else {
 				setBodyClass("inProgram", false);
-				setScreenshotScene(d.eventData.sceneName);
+				setScreenshotScene(programSceneName);
 			}
 		}
 		
 		else if (eventType == "CurrentPreviewSceneChanged") {
-			if (d.eventData.sceneName.search(tallyRegex) >= 0) {
+			previewSceneName = d.eventData.sceneName;
+			if (previewSceneName.search(tallyRegex) >= 0) {
 				setBodyClass("inPreview", true);
 				if (!document.body.classList.contains("inProgram")) {
-					sceneName.innerText = d.eventData.sceneName;
+					sceneNameEl.innerText = previewSceneName;
 				}
 			} else {
 				setBodyClass("inPreview", false);
 				if (document.body.classList.contains("inProgram")) {
-					setScreenshotScene(d.eventData.sceneName);
+					setScreenshotScene(previewSceneName);
 				}
 			}
 		}
@@ -568,6 +598,17 @@ function parseMessage({op, d}) {
 		else if (eventType == "SceneTransitionStarted") {
 			if (document.body.classList.contains("inPreview")) {
 				setBodyClass("inProgram", true);
+			} else if (document.body.classList.contains("inProgram")) {
+				setBodyClass("inPreview", true);
+			}
+		}
+
+		else if (eventType == "VendorEvent" && d.eventData.vendorName == "downstream-keyer") {
+			if (d.eventData.old_scene.search(tallyRegex) >= 0) {
+				setBodyClass("inDSK", false);
+			}
+			if (d.eventData.new_scene.search(tallyRegex) >= 0) {
+				setBodyClass("inDSK", true);
 			}
 		}
 		/*
@@ -590,31 +631,64 @@ function parseMessage({op, d}) {
 }
 
 function select(id) {
+	document.body.classList.remove("T"+tallyId);
 	tallyId = id;
-	connectWebsocket();
+	storage["tallyId"] = tallyId;
+	document.body.classList.add("T"+tallyId);
 	tallyRegex = new RegExp(`\\bT${tallyId}\\b`);
 	document.getElementById("tally_id").innerText = tallyId;
-	nosleep.enable();
-	if (document.getElementById("showScreen").checked) {
-		document.body.classList.add("showScreen");
-		screenshotInterval = setInterval(updateScreenshot, 3000);
+	if (websocket.readyState != 1) {
+		connectWebsocket();
 	} else {
+		// Already connected, only tallyId is changed
+		console.log('tally changed', programSceneName, previewSceneName);
+		document.body.classList.remove("inProgram", "inPreview")
+		if (programSceneName.search(tallyRegex) >= 0) {
+			setBodyClass("inProgram", true);
+			setScreenshotScene(previewSceneName);
+		} else if (previewSceneName.search(tallyRegex) >= 0) {
+			setBodyClass("inPreview", true);
+			setScreenshotScene(previewSceneName);
+		}
+	}
+	nosleep.enable();
+}
+function clickMinus() {
+	select(tallyId-1);
+}
+function clickPlus() {
+	select(tallyId+1);
+}
+function toggleScreen() {
+	if (document.body.classList.contains("showScreen")) {
 		document.body.classList.remove("showScreen");
 		clearInterval(screenshotInterval);
 		screenshotInterval = false;
+		storage["screenshot"] = "0";
+	} else {
+		document.body.classList.add("showScreen");
+		screenshotInterval = setInterval(updateScreenshot, 3000);
+		storage["screenshot"] = "1";
 	}
 }
 
+function toggleConnect() {
+	document.body.classList.toggle("showConnect");
+}
+
 function connectWebsocket() {
-	document.body.classList.add("connecting_");
+	document.body.classList.add("connecting");
 	socketServer = document.getElementById("wsUrl").value;
 	storage.setItem("socketServer", socketServer);
 	console.log("socketServer:", socketServer);
+	if (websocket.readyState == 1) {
+		websocket.close();
+	}
 	websocket = new WebSocket("ws://" + socketServer);
 	//console.log( websocket );
 	websocket.onopen = function(evt) {
 		console.log("Socket open");
-		document.body.classList.remove("connecting_");
+		document.body.classList.remove("connecting", "showConnect");
 		clearInterval(reconnectInterval);
 		reconnectInterval = false;
 	};
@@ -641,7 +715,7 @@ function connectWebsocket() {
 	return false;
 }
 
-function enterFullscreen() {
+function toggleFullscreen() {
 	var elem = document.documentElement;
 	/* View in fullscreen */
 	if (fullScreen) {
@@ -664,5 +738,6 @@ function enterFullscreen() {
 		}
 	}
 }
+select(tallyId);
 </script>
 </html>
